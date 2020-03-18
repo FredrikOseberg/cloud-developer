@@ -5,7 +5,7 @@ import { verify, decode } from 'jsonwebtoken'
 import { createLogger } from '../../utils/logger'
 import Axios from 'axios'
 import { Jwt } from '../../auth/Jwt'
-import { JwtPayload, IKey, IFilteredKey } from '../../auth/JwtPayload'
+import { IKey, IFilteredKey } from '../../auth/JwtPayload'
 
 const logger = createLogger('auth')
 
@@ -54,7 +54,7 @@ export const handler = async (
   }
 }
 
-async function verifyToken(authHeader: string): Promise<JwtPayload> {
+async function verifyToken(authHeader: string): Promise<any> {
   const token = getToken(authHeader)
 
   if (!token) {
@@ -83,7 +83,11 @@ async function verifyToken(authHeader: string): Promise<JwtPayload> {
     throw new Error('No keys available for signing')
   }
 
-  return verify(token, cert.publicKey, { algorithms: ['RS256'] })
+  try {
+    verify(token, cert.publicKey, { algorithms: ['RS256'] })
+  } catch {
+    throw new Error('Incorrect token')
+  }
 }
 
 function filterKeys(keys: IKey[]): IFilteredKey[] {
