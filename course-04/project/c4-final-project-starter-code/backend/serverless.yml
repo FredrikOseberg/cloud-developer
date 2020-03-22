@@ -13,7 +13,7 @@ provider:
   region: ${opt:region, 'us-east-1'}
 
   environment:
-    TODOS_TABLE: Todos-${self:provider.stage}
+    TODOS_TABLE: Todos-an-${self:provider.stage}
     INDEX_NAME: TodosIndex
 
   iamRoleStatements:
@@ -22,7 +22,11 @@ provider:
         - dynamodb:Scan
         - dynamodb:PutItem
         - dynamodb:GetItem
-      Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+        - dynamodb:DeleteItem
+        - dynamodb:Query
+      Resource:
+        - arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+        - arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/userId
 
 functions:
   Auth:
@@ -35,6 +39,7 @@ functions:
       - http:
           method: get
           path: todos
+          authorizer: Auth
 
   # TODO: Configure this function
   CreateTodo:
@@ -43,6 +48,7 @@ functions:
       - http:
           method: post
           path: todos
+          authorizer: Auth
 
   # TODO: Configure this function
   UpdateTodo:
@@ -51,6 +57,7 @@ functions:
       - http:
           method: patch
           path: todos/{todoId}
+          authorizer: Auth
 
   # TODO: Configure this function
   DeleteTodo:
@@ -59,6 +66,7 @@ functions:
       - http:
           method: delete
           path: todos/{todoId}
+          authorizer: Auth
 
   # TODO: Configure this function
   GenerateUploadUrl:
@@ -67,6 +75,7 @@ functions:
       - http:
           method: post
           path: todos/{todoId}/attachment
+          authorizer: Auth
 
 resources:
   Resources:
@@ -74,25 +83,23 @@ resources:
       Type: AWS::DynamoDB::Table
       Properties:
         AttributeDefinitions:
-          - AttributeName: partitionKey
+          - AttributeName: userId
             AttributeType: S
-          - AttributeName: sortKey
-            AttributeType: S
-          - AttributeName: indexKey
+          - AttributeName: todoId
             AttributeType: S
         KeySchema:
-          - AttributeName: partitionKey
+          - AttributeName: userId
             KeyType: HASH
-          - AttributeName: sortKey
+          - AttributeName: todoId
             KeyType: RANGE
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:provider.environment.TODOS_TABLE}
         LocalSecondaryIndexes:
           - IndexName: ${self:provider.environment.INDEX_NAME}
             KeySchema:
-              - AttributeName: partitionKey
+              - AttributeName: userId
                 KeyType: HASH
-              - AttributeName: indexKey
+              - AttributeName: todoId
                 KeyType: RANGE
             Projection:
               ProjectionType: ALL # What attributes will be copied to an index

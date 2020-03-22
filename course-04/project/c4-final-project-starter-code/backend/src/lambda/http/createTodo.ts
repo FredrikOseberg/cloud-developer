@@ -7,30 +7,31 @@ import {
 } from 'aws-lambda'
 import * as uuid from 'uuid'
 
-import * as AWS from 'aws-sdk'
-
 import { CreateTodoRequest } from '../../requests/CreateTodoRequest'
-
-const docClient = new AWS.DynamoDB.DocumentClient()
-const todosTable = process.env.TODOS_TABLe
+import { AuthProvider } from '../../logic/authProvider'
+import { TodosProvider } from '../../logic/todosProvider'
+import { TodoItem } from '../../models/TodoItem'
 
 export const handler: APIGatewayProxyHandler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
+  const authProvider = new AuthProvider(event.headers.Authorization)
+  const todosProvider = new TodosProvider()
+
   const newTodo: CreateTodoRequest = JSON.parse(event.body)
   const itemId = uuid.v4()
 
-  const item = {
-    id: itemId,
+  const userId = authProvider.getUserId()
+
+  const item: TodoItem = {
+    todoId: itemId,
+    userId: userId,
     ...newTodo
   }
 
   try {
-    await docClient.put({
-      TableName: todosTable,
-      Item: item
-    })
-  } catch {
+    await todosProvider.createTodoItem(item)
+  } catch (e) {
     return {
       statusCode: 500,
       body: 'Could not insert into db'
