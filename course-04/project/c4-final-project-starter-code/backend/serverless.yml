@@ -15,6 +15,8 @@ provider:
   environment:
     TODOS_TABLE: Todos-an-${self:provider.stage}
     INDEX_NAME: TodosIndex
+    IMAGES_S3_BUCKET: todoimages
+    IMAGES_S3_BUCKET_URL_EXPIRATION: 300
 
   iamRoleStatements:
     - Effect: Allow
@@ -27,6 +29,11 @@ provider:
       Resource:
         - arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
         - arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/userId
+    - Effect: Allow
+      Action:
+        - s3:PutObject
+        - s3:GetObject
+      Resource: arn:aws:s3:::${self:provider.environment.IMAGES_S3_BUCKET}/*
 
 functions:
   Auth:
@@ -40,6 +47,7 @@ functions:
           method: get
           path: todos
           authorizer: Auth
+          cors: true
 
   # TODO: Configure this function
   CreateTodo:
@@ -49,6 +57,7 @@ functions:
           method: post
           path: todos
           authorizer: Auth
+          cors: true
 
   # TODO: Configure this function
   UpdateTodo:
@@ -58,6 +67,7 @@ functions:
           method: patch
           path: todos/{todoId}
           authorizer: Auth
+          cors: true
 
   # TODO: Configure this function
   DeleteTodo:
@@ -67,6 +77,7 @@ functions:
           method: delete
           path: todos/{todoId}
           authorizer: Auth
+          cors: true
 
   # TODO: Configure this function
   GenerateUploadUrl:
@@ -76,6 +87,7 @@ functions:
           method: post
           path: todos/{todoId}/attachment
           authorizer: Auth
+          cors: true
 
 resources:
   Resources:
@@ -103,3 +115,35 @@ resources:
                 KeyType: RANGE
             Projection:
               ProjectionType: ALL # What attributes will be copied to an index
+
+    ImagesBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:provider.environment.IMAGES_S3_BUCKET}
+        CorsConfiguration:
+          CorsRules:
+            - AllowedOrigins:
+                - '*'
+              AllowedHeaders:
+                - '*'
+              AllowedMethods:
+                - GET
+                - PUT
+                - POST
+                - DELETE
+                - HEAD
+              MaxAge: 3000
+
+    BucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        PolicyDocument:
+          Id: MyPolicy
+          Version: '2012-10-17'
+          Statement:
+            - Sid: PublicReadForGetBucketObjects
+              Effect: Allow
+              Principal: '*'
+              Action: 's3:GetObject'
+              Resource: 'arn:aws:s3:::${self:provider.environment.IMAGES_S3_BUCKET}/*'
+        Bucket: !Ref ImagesBucket

@@ -6,11 +6,30 @@ import {
   APIGatewayProxyHandler
 } from 'aws-lambda'
 
+import { UploadProvider } from '../../logic/uploadProvider'
+
 export const handler: APIGatewayProxyHandler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
   const todoId = event.pathParameters.todoId
-  console.log(todoId)
-  // TODO: Return a presigned URL to upload a file for a TODO item with the provided id
-  return undefined
+  const uploadProvider = new UploadProvider()
+
+  if (!todoId) {
+    return {
+      statusCode: 400,
+      body: 'No todo id defined'
+    }
+  }
+
+  const uploadUrl = uploadProvider.getUploadUrl(todoId)
+
+  return {
+    statusCode: 201,
+    headers: {
+      'Access-Control-Allow-Origin': '*'
+    },
+    body: JSON.stringify({
+      uploadUrl
+    })
+  }
 }
