@@ -1,9 +1,11 @@
 import { DatabaseProvider } from './databaseProvider'
 import { TodoItem } from '../models/TodoItem'
+import { UploadProvider } from './uploadProvider'
 
 export class TodosProvider {
   private tableName = process.env.TODOS_TABLE
   private dbProvider = new DatabaseProvider()
+  private uploadProvider = new UploadProvider()
 
   createTodoItem = async (item: TodoItem) => {
     try {
@@ -43,6 +45,38 @@ export class TodosProvider {
       return result
     } catch {
       throw new Error('Unable to get todo items')
+    }
+  }
+
+  getUploadUrl = (todoId: string) => {
+    const uploadUrl = this.uploadProvider.getUploadUrl(todoId)
+    return uploadUrl
+  }
+
+  updateTodoItem = () => {}
+
+  updateTodoImage = async (
+    userId: string,
+    todoId: string,
+    attachmentUrl: string
+  ) => {
+    const params = {
+      TableName: this.tableName,
+      Key: {
+        userId: userId,
+        todoId: todoId
+      },
+      UpdateExpression: 'set attachmentUrl = :u',
+      ExpressionAttributeValues: {
+        ':u': attachmentUrl
+      },
+      ReturnValues: 'UPDATED_NEW'
+    }
+
+    try {
+      await this.dbProvider.update(params)
+    } catch {
+      throw new Error('Could not update todo')
     }
   }
 }

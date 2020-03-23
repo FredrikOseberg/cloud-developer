@@ -15,7 +15,7 @@ provider:
   environment:
     TODOS_TABLE: Todos-an-${self:provider.stage}
     INDEX_NAME: TodosIndex
-    IMAGES_S3_BUCKET: todoimages
+    IMAGES_S3_BUCKET: totallynewbucket
     IMAGES_S3_BUCKET_URL_EXPIRATION: 300
 
   iamRoleStatements:
@@ -26,6 +26,7 @@ provider:
         - dynamodb:GetItem
         - dynamodb:DeleteItem
         - dynamodb:Query
+        - dynamodb:UpdateItem
       Resource:
         - arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
         - arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/userId
@@ -133,17 +134,3 @@ resources:
                 - DELETE
                 - HEAD
               MaxAge: 3000
-
-    BucketPolicy:
-      Type: AWS::S3::BucketPolicy
-      Properties:
-        PolicyDocument:
-          Id: MyPolicy
-          Version: '2012-10-17'
-          Statement:
-            - Sid: PublicReadForGetBucketObjects
-              Effect: Allow
-              Principal: '*'
-              Action: 's3:GetObject'
-              Resource: 'arn:aws:s3:::${self:provider.environment.IMAGES_S3_BUCKET}/*'
-        Bucket: !Ref ImagesBucket

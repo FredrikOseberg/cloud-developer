@@ -55,7 +55,12 @@ export class DatabaseProvider {
     }
   }
 
-  update = () => {}
-
-  get = () => {}
+  update = async (params: any) => {
+    try {
+      await this.client.update(params).promise()
+    } catch (e) {
+      console.log(e)
+      throw new Error('Could not update todo')
+    }
+  }
 }
