@@ -17,24 +17,25 @@ provider:
     INDEX_NAME: TodosIndex
     IMAGES_S3_BUCKET: totallynewbucket
     IMAGES_S3_BUCKET_URL_EXPIRATION: 300
+    DYNAMO_DB_RESOURCE: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
 
-  iamRoleStatements:
-    - Effect: Allow
-      Action:
-        - dynamodb:Scan
-        - dynamodb:PutItem
-        - dynamodb:GetItem
-        - dynamodb:DeleteItem
-        - dynamodb:Query
-        - dynamodb:UpdateItem
-      Resource:
-        - arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
-        - arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/userId
-    - Effect: Allow
-      Action:
-        - s3:PutObject
-        - s3:GetObject
-      Resource: arn:aws:s3:::${self:provider.environment.IMAGES_S3_BUCKET}/*
+  # iamRoleStatements:
+  # - Effect: Allow
+  #   Action:
+  #     - dynamodb:Scan
+  #     - dynamodb:PutItem
+  #     - dynamodb:GetItem
+  #     - dynamodb:DeleteItem
+  #     - dynamodb:Query
+  #     - dynamodb:UpdateItem
+  #   Resource:
+  #     - arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+  #     - arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/userId
+  # - Effect: Allow
+  #   Action:
+  #     - s3:PutObject
+  #     - s3:GetObject
+  #   Resource: arn:aws:s3:::${self:provider.environment.IMAGES_S3_BUCKET}/*
 
 functions:
   Auth:
@@ -49,6 +50,12 @@ functions:
           path: todos
           authorizer: Auth
           cors: true
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+        Resource:
+          - ${self:provider.environment.DYNAMO_DB_RESOURCE}
 
   # TODO: Configure this function
   CreateTodo:
@@ -59,6 +66,12 @@ functions:
           path: todos
           authorizer: Auth
           cors: true
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:PutItem
+        Resource:
+          - ${self:provider.environment.DYNAMO_DB_RESOURCE}
 
   # TODO: Configure this function
   UpdateTodo:
@@ -69,6 +82,12 @@ functions:
           path: todos/{todoId}
           authorizer: Auth
           cors: true
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:UpdateItem
+        Resource:
+          - ${self:provider.environment.DYNAMO_DB_RESOURCE}
 
   # TODO: Configure this function
   DeleteTodo:
@@ -79,6 +98,16 @@ functions:
           path: todos/{todoId}
           authorizer: Auth
           cors: true
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:DeleteItem
+        Resource:
+          - ${self:provider.environment.DYNAMO_DB_RESOURCE}
+      - Effect: Allow
+        Action:
+          - s3:DeleteObject
+        Resource: arn:aws:s3:::${self:provider.environment.IMAGES_S3_BUCKET}/*
 
   # TODO: Configure this function
   GenerateUploadUrl:
@@ -89,6 +118,16 @@ functions:
           path: todos/{todoId}/attachment
           authorizer: Auth
           cors: true
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:UpdateItem
+        Resource:
+          - ${self:provider.environment.DYNAMO_DB_RESOURCE}
+      - Effect: Allow
+        Action:
+          - s3:PutObject
+        Resource: arn:aws:s3:::${self:provider.environment.IMAGES_S3_BUCKET}/*
 
 resources:
   Resources:
@@ -134,3 +173,17 @@ resources:
                 - DELETE
                 - HEAD
               MaxAge: 3000
+
+    BucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        PolicyDocument:
+          Id: AllowReadImages
+          Version: '2012-10-17'
+          Statement:
+            - Sid: PublicReadForGetBucketObjects
+              Effect: Allow
+              Principal: '*'
+              Action: 's3:GetObject'
+              Resource: 'arn:aws:s3:::${self:provider.environment.IMAGES_S3_BUCKET}/*'
+        Bucket: !Ref ImagesBucket

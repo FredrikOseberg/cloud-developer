@@ -13,4 +13,13 @@ export class UploadProvider {
       Expires: urlExpires
     })
   }
+
+  deleteImageFromS3 = async (todoId: string) => {
+    return this.client
+      .deleteObject({
+        Bucket: bucketName,
+        Key: todoId
+      })
+      .promise()
+  }
 }

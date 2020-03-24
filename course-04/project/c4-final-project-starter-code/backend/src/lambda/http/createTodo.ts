@@ -23,10 +23,26 @@ export const handler: APIGatewayProxyHandler = async (
 
   const userId = authProvider.getUserId()
 
+  if (!userId) {
+    return {
+      statusCode: 400,
+      body: 'Invalid userId'
+    }
+  }
+
+  const valid = validate(newTodo)
+  if (!valid) {
+    return {
+      statusCode: 500,
+      body: 'Could not insert into db'
+    }
+  }
+
+  const sanitizedItem = sanitize(newTodo)
   const item: TodoItem = {
     todoId: itemId,
     userId: userId,
-    ...newTodo
+    ...sanitizedItem
   }
 
   try {
@@ -47,4 +63,34 @@ export const handler: APIGatewayProxyHandler = async (
       item
     })
   }
+}
+
+const validate = (newTodo: CreateTodoRequest) => {
+  if (!newTodo.name || typeof newTodo.name !== 'string') return false
+  if (!newTodo.dueDate || typeof newTodo.dueDate !== 'string') return false
+  return true
+}
+
+const sanitize = (item: CreateTodoRequest) => {
+  const newItem: CreateTodoRequest = {
+    dueDate: '',
+    name: ''
+  }
+
+  if (item.attachmentUrl) {
+    newItem.attachmentUrl = item.attachmentUrl.toString()
+  }
+
+  if (item.createdAt) {
+    newItem.createdAt = item.createdAt.toString()
+  }
+
+  newItem.dueDate = item.dueDate.toString()
+  newItem.name = item.name.toString()
+
+  if (item.done && typeof item.done === 'boolean') {
+    newItem.done = item.done
+  }
+
+  return newItem
 }

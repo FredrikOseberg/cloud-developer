@@ -20,6 +20,13 @@ export const handler: APIGatewayProxyHandler = async (
 
   const userId = authProvider.getUserId()
 
+  if (!userId) {
+    return {
+      statusCode: 404,
+      body: 'Could not find user'
+    }
+  }
+
   let result: PromiseResult<DocumentClient.QueryOutput, AWSError>
   try {
     result = await todosProvider.getAllTodoItems(userId)

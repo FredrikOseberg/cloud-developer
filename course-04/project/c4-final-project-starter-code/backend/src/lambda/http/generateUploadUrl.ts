@@ -20,10 +20,10 @@ export const handler: APIGatewayProxyHandler = async (
   const todosProvider = new TodosProvider()
   const uploadUrl = todosProvider.getUploadUrl(todoId)
 
-  if (!todoId) {
+  if (!todoId || !userId) {
     return {
       statusCode: 400,
-      body: 'No todo id defined'
+      body: 'Bad request'
     }
   }
 

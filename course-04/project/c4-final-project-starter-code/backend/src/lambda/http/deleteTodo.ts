@@ -17,10 +17,10 @@ export const handler: APIGatewayProxyHandler = async (
   const todoId = event.pathParameters.todoId
   const userId = authProvider.getUserId()
 
-  if (!todoId) {
+  if (!todoId || !userId) {
     return {
       statusCode: 400,
-      body: 'Missing tododId'
+      body: 'Bad request'
     }
   }
 
@@ -29,7 +29,10 @@ export const handler: APIGatewayProxyHandler = async (
 
     return {
       statusCode: 200,
-      body: 'Item deleted'
+      body: 'Item deleted',
+      headers: {
+        'Access-Control-Allow-Origin': '*'
+      }
     }
   } catch (e) {
     console.log(e)
