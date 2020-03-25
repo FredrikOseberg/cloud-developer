@@ -15,10 +15,10 @@ custom:
         title: Serverless Todo
     models:
       - name: CreateTodoRequest
-        content-type: application/json
+        contentType: application/json
         schema: ${file(src/validation/create-todo.json)}
       - name: UpdateTodoRequest
-        content-type: application/json
+        contentType: application/json
         schema: ${file(src/validation/update-todo.json)}
 
 provider:
@@ -58,6 +58,12 @@ functions:
           - dynamodb:Query
         Resource:
           - ${self:provider.environment.DYNAMO_DB_RESOURCE}
+      - Effect: 'Allow'
+        Action:
+          - 'xray:PutTraceSegments'
+          - 'xray:PutTelemetryRecords'
+        Resource:
+          - '*'
 
   # TODO: Configure this function
   CreateTodo:
@@ -80,6 +86,12 @@ functions:
           - dynamodb:PutItem
         Resource:
           - ${self:provider.environment.DYNAMO_DB_RESOURCE}
+      - Effect: 'Allow'
+        Action:
+          - 'xray:PutTraceSegments'
+          - 'xray:PutTelemetryRecords'
+        Resource:
+          - '*'
 
   # TODO: Configure this function
   UpdateTodo:
@@ -102,6 +114,12 @@ functions:
           - dynamodb:UpdateItem
         Resource:
           - ${self:provider.environment.DYNAMO_DB_RESOURCE}
+      - Effect: 'Allow'
+        Action:
+          - 'xray:PutTraceSegments'
+          - 'xray:PutTelemetryRecords'
+        Resource:
+          - '*'
 
   # TODO: Configure this function
   DeleteTodo:
@@ -122,6 +140,12 @@ functions:
         Action:
           - s3:DeleteObject
         Resource: arn:aws:s3:::${self:provider.environment.IMAGES_S3_BUCKET}/*
+      - Effect: 'Allow'
+        Action:
+          - 'xray:PutTraceSegments'
+          - 'xray:PutTelemetryRecords'
+        Resource:
+          - '*'
 
   # TODO: Configure this function
   GenerateUploadUrl:
@@ -142,6 +166,12 @@ functions:
         Action:
           - s3:PutObject
         Resource: arn:aws:s3:::${self:provider.environment.IMAGES_S3_BUCKET}/*
+      - Effect: 'Allow'
+        Action:
+          - 'xray:PutTraceSegments'
+          - 'xray:PutTelemetryRecords'
+        Resource:
+          - '*'
 
 resources:
   Resources:
