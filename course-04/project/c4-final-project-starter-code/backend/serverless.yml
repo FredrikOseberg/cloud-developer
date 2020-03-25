@@ -16,10 +16,10 @@ custom:
         models:
           - name: CreateTodo
             content-type: application/json
-            schema: ${file(validation/create-todo.json)}
+            schema: ${file(src/validation/create-todo.json)}
           - name: UpdateTodo
             content-type: application/json
-            schema: ${file(validation/update-todo.json)}
+            schema: ${file(src/validation/update-todo.json)}
 
 provider:
   name: aws
