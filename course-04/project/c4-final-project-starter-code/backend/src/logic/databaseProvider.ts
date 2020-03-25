@@ -1,11 +1,14 @@
 import * as AWS from 'aws-sdk'
+import * as AWSXRay from 'aws-xray-sdk'
 
 interface IDeleteKey {
   [key: string]: string
 }
 
+const XAWS = AWSXRay.captureAWS(AWS)
+
 export class DatabaseProvider {
-  private client = new AWS.DynamoDB.DocumentClient()
+  private client = new XAWS.DynamoDB.DocumentClient()
 
   create = async (tableName: string, item: any) => {
     try {
