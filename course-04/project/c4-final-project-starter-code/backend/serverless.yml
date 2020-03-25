@@ -13,13 +13,13 @@ custom:
       info:
         version: 1.0.0
         title: Serverless Todo
-        models:
-          - name: CreateTodo
-            content-type: application/json
-            schema: ${file(src/validation/create-todo.json)}
-          - name: UpdateTodo
-            content-type: application/json
-            schema: ${file(src/validation/update-todo.json)}
+    models:
+      - name: CreateTodoRequest
+        content-type: application/json
+        schema: ${file(src/validation/create-todo.json)}
+      - name: UpdateTodoRequest
+        content-type: application/json
+        schema: ${file(src/validation/update-todo.json)}
 
 provider:
   name: aws
@@ -73,7 +73,7 @@ functions:
             summary: Create a new todo item
             description: Creates a new todo item
             requestModels:
-              'application/json': CreateTodo
+              'application/json': CreateTodoRequest
     iamRoleStatements:
       - Effect: Allow
         Action:
@@ -95,7 +95,7 @@ functions:
             summary: Create a new todo item
             description: Creates a new todo item
             requestModels:
-              'application/json': UpdateTodo
+              'application/json': UpdateTodoRequest
     iamRoleStatements:
       - Effect: Allow
         Action:

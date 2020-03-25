@@ -4,10 +4,10 @@ import * as AWSXRay from 'aws-xray-sdk'
 const bucketName = process.env.IMAGES_S3_BUCKET
 const urlExpires = process.env.IMAGES_S3_BUCKET_URL_EXPIRATION
 
-const XAWS = AWSXRay.captureAWS(AWS)
+const XAWS = AWSXRay.captureAWSClient(new AWS.S3({ signatureVersion: 'v4' }))
 
 export class UploadProvider {
-  private client = new XAWS.S3({ signatureVersion: 'v4' })
+  private client = XAWS
 
   getUploadUrl = (todoId: string) => {
     return this.client.getSignedUrl('putObject', {
